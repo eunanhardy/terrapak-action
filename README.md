@@ -47,10 +47,11 @@ jobs:
       - name: Config-Workspace
         run: git config --global --add safe.directory /github/workspace
       - name: Terrapak Sync
-        uses: eunanhardy/terrapak-action@main
+        uses: eunanhardy/terrapak-action@v1
         with:
           action: sync
           github_token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.TP_TOKEN}}
 
 ```
 Workflows for Publishing and Unpublishing modules are also available.
@@ -72,7 +73,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: "Terrapak Remove"
-        uses: eunanhardy/repoman-runner@main
+        uses: eunanhardy/terrapak-action@v1
         with:
           action: closed
   module-publish:
@@ -84,7 +85,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: "Terrapak Publish"
-        uses: eunanhardy/repoman-runner@main
+        uses: eunanhardy/terrapak-action@v1
         with:
           action: merged
 ```

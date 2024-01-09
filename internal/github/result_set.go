@@ -2,6 +2,7 @@ package github
 
 import "fmt"
 
+// I dont like this, im testing things out
 type Resultset struct {
 	Name    string
 	Version string
