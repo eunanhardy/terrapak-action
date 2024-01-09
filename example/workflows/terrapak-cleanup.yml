@@ -1,0 +1,36 @@
+# terrapak_close.yml
+name: "Terrapak"
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  module-cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Terrapak Cleanup"
+        uses: eunanhardy/terrapak-action@v1
+        with:
+          action: closed
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.TP_TOKEN}}
+  module-publish:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Terrapak Publish"
+        uses: eunanhardy/terrapak-action@v1
+        with:
+          action: merged
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.TP_TOKEN}}

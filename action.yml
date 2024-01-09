@@ -1,0 +1,28 @@
+# action.yml
+name: 'Terrapak'
+description: 'Making terraform module management seemless'
+branding:
+  color: yellow
+  icon: package
+
+inputs:
+  config_path:
+    description: "path to config file"
+    default: "terrapak.hcl"
+  action:  # id of input
+    description: 'what action for the runner to perform'
+    default: "sync"
+  issue_number:
+    description: "test issue number injection"
+    default: "${{github.event.pull_request.number}}"
+  repo_name:
+    description: "current repo info"
+    default: "${{github.repository}}"
+  github_token:
+    description: "Github token"
+  token:
+    description: "Auth token for Terrapak"
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

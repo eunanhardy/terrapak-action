@@ -1,0 +1,22 @@
+name: "Terrapak"
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  module-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+      - name: setup branches
+        run: git fetch origin main
+      - name: Terrapak Sync
+        uses: eunanhardy/terrapak-action@v1
+        with:
+          action: sync
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.TP_TOKEN}}
