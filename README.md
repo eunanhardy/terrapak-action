@@ -8,14 +8,15 @@ Example `terrapak.hcl` file:
 
 ```hcl
 terrapak {
-    hostname = "terrapak.io"
+    hostname = "terrapak.dev"
     organization = "myorg"
 }
 
-module "my-s3-module" {
+module "aws-bucket" {
     provider = "aws"
-    path = "modules/aws/my-s3-module"
+    path = "modules/aws/bucket"
     version = "1.0.0"
+    # Example url: terrapak.dev/myorg/aws-bucket/aws
 }
 
 ```
