@@ -23,7 +23,7 @@ module "aws-bucket" {
 
 
 ### Requirements
-To use this action you must first setup a instance of [Terrapack](https://github.com/eunanhardy/terrapak)
+To use this action you must first setup a instance of [Terrapak](https://github.com/eunanhardy/terrapak)
 
 
 ### Workflows
