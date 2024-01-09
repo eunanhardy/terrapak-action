@@ -22,6 +22,10 @@ module "aws-bucket" {
 ```
 
 
+### Requirements
+To use this action you must first setup a instance of [Terrapack](https://github.com/eunanhardy/terrapak)
+
+
 ### Workflows
 Add the following workflow to your repository to automatically publish new versions of your modules when a pull request is merged to the target branch. 
 
@@ -90,3 +94,5 @@ jobs:
           action: merged
 ```
 
+> [!NOTE]  
+> This project is currently in development and not ready for production use.
