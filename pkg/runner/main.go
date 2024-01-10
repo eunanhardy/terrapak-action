@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eunanhardy/terrapak-action/internal/github/store"
 	ms "github.com/eunanhardy/terrapak-action/internal/module"
 
 	"github.com/eunanhardy/terrapak-action/internal/config"
@@ -42,7 +43,7 @@ func Run(){
 }
 
 func onOpenedPR(){
-
+	
 	current_config, err := config.Load(); if err != nil {
 		fmt.Println("[ERROR] - Could not load config file")
 		os.Exit(1)
@@ -52,7 +53,7 @@ func onOpenedPR(){
 		fmt.Println("[ERROR] - Terrapak cannot be reached")
 		os.Exit(1)
 	}
-	github.NewDefaultResultSet()
+	store.New()
 	for _, mod := range current_config.Modules {
 		changed := fileutils.HasChanges(mod.Path)
 		fmt.Printf("[DEBUG] - %s has changes: %t\n",mod.Name,changed)

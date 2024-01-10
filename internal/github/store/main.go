@@ -1,25 +1,25 @@
-package github
+package store
 
 import "fmt"
 
 // I dont like this, im testing things out
-type Resultset struct {
+type ResultStore struct {
 	Name    string
 	Version string
-	Change        string
+	Change  string
 }
 
-var resultSet []Resultset
+var resultSet []ResultStore
 
-func NewDefaultResultSet(){
-	resultSet = []Resultset{}
+func New(){
+	resultSet = []ResultStore{}
 }
 
-func AddResult(rs Resultset) {
+func (rs ResultStore) Add() {
 	resultSet = append(resultSet, rs)
 }
 
-func GetDefaultResultSet() []Resultset {
+func GetDefaultResultSet() []ResultStore {
 	return resultSet
 }
 

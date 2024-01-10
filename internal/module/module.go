@@ -8,7 +8,7 @@ import (
 
 	"github.com/eunanhardy/terrapak-action/internal/config"
 	"github.com/eunanhardy/terrapak-action/internal/fileutils"
-	"github.com/eunanhardy/terrapak-action/internal/github"
+	"github.com/eunanhardy/terrapak-action/internal/github/store"
 	"github.com/eunanhardy/terrapak-action/internal/http_client"
 
 	"github.com/fatih/color"
@@ -96,12 +96,12 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 
 	if resp.StatusCode() == 200 {
 		color.Green("Module Synced: ",config.Name)
-		result := github.Resultset{
+		result := store.ResultStore{
 			Name: config.Name,
 			Version: config.Version,
 			Change: "Synced",
 		}
-		github.AddResult(result)
+		result.Add()
 		os.Remove(filepath)
 	}
 	

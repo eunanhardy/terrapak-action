@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/fatih/color"
+	"github.com/eunanhardy/terrapak-action/internal/github/store"
 )
 
 const TABLE_TEMPLATE = `## Terrapak Sync
@@ -39,13 +39,9 @@ func AddPRComment(markdown string) {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusCreated {
-		
-		color.Green("Comment added successfully")
-	}
 }
 
 func DisplayPRResults(){
-	results_template := TABLE_TEMPLATE+Print()
+	results_template := TABLE_TEMPLATE + store.Print()
 	AddPRComment(results_template)
 }
