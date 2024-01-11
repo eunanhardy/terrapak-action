@@ -25,7 +25,6 @@ func AddPRComment(markdown string) {
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
 		fmt.Println(err)
 	}
-
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
