@@ -2,11 +2,11 @@ package github
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/github/store"
+	"github.com/eunanhardy/terrapak-action/internal/http_client"
 )
 
 const TABLE_TEMPLATE = `## Terrapak Sync
@@ -22,24 +22,29 @@ func AddPRComment(markdown string) {
 	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, pr_number)
 	fmt.Println(endpoint)
 	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
-	fmt.Println(strings.NewReader(body))
-	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
+	client := http_client.New(token)
+	resp, err := client.Post(endpoint,"application/json",strings.NewReader(body)); if err != nil {
 		fmt.Println(err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-	fmt.Println(req)
-	client := &http.Client{}
-	resp, err := client.Do(req); if err != nil {
-		fmt.Println(err)
-	}
-
 	fmt.Println(resp.Status)
+	// fmt.Println(strings.NewReader(body))
+	// req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	// req.Header.Set("Content-Type", "application/json")
+	// req.Header.Set("Accept", "application/vnd.github.v3+json")
+	// req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+	// fmt.Println(req)
+	// client := &http.Client{}
+	// resp, err := client.Do(req); if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// fmt.Println(resp.Status)
 
 
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
 
 }
 

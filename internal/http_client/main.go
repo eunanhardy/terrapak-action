@@ -18,7 +18,10 @@ func New(token string) *http.Client {
 		Token: token,
 		Transport: http.DefaultTransport,
 	}
-	defaultClient = &http.Client{Transport: t}
+	if defaultClient == nil {
+		defaultClient = &http.Client{Transport: t}
+	}
+	
 	return defaultClient
 }
 
