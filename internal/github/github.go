@@ -36,6 +36,8 @@ func AddPRComment(markdown string) {
 		fmt.Println(err)
 	}
 
+	fmt.Println(resp.Status)
+
 
 	defer resp.Body.Close()
 
