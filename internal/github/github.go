@@ -18,9 +18,8 @@ Changes detected in the following modules.
 func AddPRComment(markdown string) {
 	token := os.Getenv("INPUT_GITHUB_TOKEN")
 	repo := os.Getenv("INPUT_REPO_NAME")
-	owner := os.Getenv("GITHUB_REPOSITORY_OWNER")
 	pr_number := os.Getenv("INPUT_ISSUE_NUMBER")
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%s/comments", owner, repo, pr_number)
+	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, pr_number)
 	fmt.Println(endpoint)
 	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
