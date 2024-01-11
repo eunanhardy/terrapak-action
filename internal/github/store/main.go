@@ -26,7 +26,7 @@ func GetDefaultResultSet() []ResultStore {
 func Print() string {
 	var output string
 	for _, rs := range resultSet {
-		output += fmt.Sprintf("| %s | %s | %s |\n", rs.Name, rs.Version, rs.Change)
+		output += fmt.Sprintf("| %s | %s | %s | <br>", rs.Name, rs.Version, rs.Change)
 
 	}
 	return output
