@@ -14,7 +14,7 @@ import (
 const TABLE_TEMPLATE = `## Terrapak Sync
 Changes detected in the following modules.
 | Module | Version | Action |
-| :---: | :---: | :---: | <br>
+| :---: | :---: | :---: |
 `
 
 func AddPRComment(markdown string) {
