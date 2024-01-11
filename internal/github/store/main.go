@@ -25,12 +25,13 @@ func GetDefaultResultSet() []ResultStore {
 
 func Print() string {
 	var output string
-	for idx, rs := range resultSet {
-		if idx == len(resultSet)-1 {
-			output += fmt.Sprintf(" | %s | %s | %s |", rs.Name, rs.Version, rs.Change)
-		} else {
-			output += fmt.Sprintf(" | %s | %s | %s | <br>", rs.Name, rs.Version, rs.Change)
-		}
+	for _, rs := range resultSet {
+		output += fmt.Sprintf(" | %s | %s | %s |\n", rs.Name, rs.Version, rs.Change)
+		// if idx == len(resultSet)-1 {
+		// 	output += fmt.Sprintf(" | %s | %s | %s |", rs.Name, rs.Version, rs.Change)
+		// } else {
+		// 	output += fmt.Sprintf(" | %s | %s | %s |\n", rs.Name, rs.Version, rs.Change)
+		// }
 	}
 	return output
 }
