@@ -22,6 +22,7 @@ func AddPRComment(markdown string) {
 	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, pr_number)
 	fmt.Println(endpoint)
 	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
+	fmt.Println(strings.NewReader(body))
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
 		fmt.Println(err)
 	}
