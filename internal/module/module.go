@@ -80,7 +80,6 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 		}
 
 		uploadRequestBody.Readme = string(bytesReadme)
-		color.Yellow(string(bytesReadme))
 	}
 
 	client := resty.New()
@@ -95,7 +94,6 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 	}
 
 	if resp.StatusCode() == 200 {
-		color.Green("Module Synced: ",config.Name)
 		result := store.ResultStore{
 			Name: config.Name,
 			Version: config.Version,
@@ -112,14 +110,13 @@ func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleM
 	has_chanaged := fileutils.HasPreviousChanges(config.Path)
 
 	if data.PublishedAt.Year() < 2000 {
-		color.Yellow("Syncing module changes: " + config.Name)
 		if has_chanaged {
 			err := Upload(hostname,config); if err != nil {
-				color.Red("Error syncing module changes:%s\n",err)
+				color.Red("[LOG] - Error syncing module changes:%s\n",err)
 			}
 		}
 	} else {
-		color.Yellow("Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
+		fmt.Printf("[LOG] - Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
 	}
 
 }
@@ -134,7 +131,7 @@ func PublishModule(module *config.ModuleConfig){
 	}
 
 	if resp.StatusCode == 200 {
-		color.Green("module published: %s",module.Name)
+		fmt.Printf("module published: %s",module.Name)
 	}
 
 }

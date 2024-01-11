@@ -126,7 +126,7 @@ func onClosedPR(){
 
 		if status == 200 {
 			if module.PublishedAt.Year() < 2000 {
-				color.Magenta("[DELETE] - Module is a draft, removing module")
+				fmt.Println("[DELETE] - Module is a draft, removing module")
 				ms.RemoveDraft(&mod)
 			}
 		}
@@ -142,7 +142,7 @@ func healthCheck(hostname string) bool {
 	}
 
 	if resp.StatusCode == 200 {
-		color.Green("[INFO] - Terrapak service is up")
+		color.Green("[SETUP] - Terrapak service is up")
 		return true
 	}
 
