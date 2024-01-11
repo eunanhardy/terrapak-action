@@ -17,11 +17,12 @@ Changes detected in the following modules.
 
 func AddPRComment(markdown string) {
 	token := os.Getenv("INPUT_GITHUB_TOKEN")
-	owner := os.Getenv("INPUT_REPO_NAME")
+	repo := os.Getenv("INPUT_REPO_NAME")
+	owner := os.Getenv("GITHUB_REPOSITORY_OWNER")
 	pr_number := os.Getenv("INPUT_ISSUE_NUMBER")
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", owner, pr_number)
+	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/%s/comments", owner, repo, pr_number)
+	fmt.Println(endpoint)
 	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
-	fmt.Println("DEBUG: "+body)
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
 		fmt.Println(err)
 	}
@@ -30,7 +31,7 @@ func AddPRComment(markdown string) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-
+	fmt.Println(req)
 	client := &http.Client{}
 	resp, err := client.Do(req); if err != nil {
 		fmt.Println(err)
