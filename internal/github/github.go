@@ -21,7 +21,7 @@ func AddPRComment(markdown string) {
 	pr_number := os.Getenv("INPUT_ISSUE_NUMBER")
 	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", owner, pr_number)
 	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
-
+	fmt.Println("DEBUG: "+body)
 	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
 		fmt.Println(err)
 	}
@@ -45,5 +45,6 @@ func AddPRComment(markdown string) {
 
 func DisplayPRResults(){
 	results_template := TABLE_TEMPLATE + store.Print()
+	fmt.Println(results_template)
 	AddPRComment(results_template)
 }
