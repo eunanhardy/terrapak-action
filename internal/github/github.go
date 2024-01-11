@@ -1,12 +1,14 @@
 package github
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/github/store"
-	"github.com/eunanhardy/terrapak-action/internal/http_client"
+	gh "github.com/google/go-github/v58/github"
 )
 
 const TABLE_TEMPLATE = `## Terrapak Sync
@@ -17,16 +19,27 @@ Changes detected in the following modules.
 
 func AddPRComment(markdown string) {
 	token := os.Getenv("INPUT_GITHUB_TOKEN")
-	repo := os.Getenv("INPUT_REPO_NAME")
-	pr_number := os.Getenv("INPUT_ISSUE_NUMBER")
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, pr_number)
-	fmt.Println(endpoint)
-	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
-	client := http_client.New(token)
-	resp, err := client.Post(endpoint,"application/json",strings.NewReader(body)); if err != nil {
+	repoowner := os.Getenv("INPUT_REPO_NAME")
+	owner := strings.Split(repoowner, "/")[0]
+	repo := strings.Split(repoowner, "/")[1]
+	pr_number, err := strconv.Atoi(os.Getenv("INPUT_ISSUE_NUMBER")); if err != nil {
 		fmt.Println(err)
 	}
+	//endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", repo, pr_number)
+	//fmt.Println(endpoint)
+	input := &gh.IssueComment{Body: &markdown}
+	ctx := context.Background()
+	client := gh.NewTokenClient(ctx, token)
+	comment,resp, err := client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(comment)
 	fmt.Println(resp.Status)
+	// client := http_client.New(token)
+	// resp, err := client.Post(endpoint,"application/json",strings.NewReader(body)); if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(resp.Status)
 	// fmt.Println(strings.NewReader(body))
 	// req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
 	// 	fmt.Println(err)
