@@ -32,10 +32,21 @@ func AddPRComment(markdown string) {
 	list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
 		fmt.Println(err)
 	}
+	currentComment := gh.IssueComment{}
+	for _, comment := range list {
+		if strings.Contains(*comment.Body, "## Terrapak Sync") {
+			currentComment = *comment
+			return
+		}
+	}
 
-	fmt.Println(list)
+	if currentComment.Body == nil {
+		_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
+			fmt.Println(err)
+		}
+	}
 
-	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
+	_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID, input); if err != nil {
 		fmt.Println(err)
 	}
 }
