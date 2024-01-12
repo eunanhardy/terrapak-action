@@ -34,6 +34,7 @@ func AddPRComment(markdown string) {
 	for _, comment := range list {
 		if strings.Contains(*comment.Body, "## Terrapak Sync") {
 			currentComment = *comment
+			fmt.Println(currentComment.ID)
 			return
 		}
 	}
