@@ -25,8 +25,6 @@ func AddPRComment(markdown string) {
 	pr_number, err := strconv.Atoi(os.Getenv("INPUT_ISSUE_NUMBER")); if err != nil {
 		fmt.Println(err)
 	}
-
-	input := &gh.IssueComment{Body: &markdown}
 	ctx := context.Background()
 	client := gh.NewTokenClient(ctx, token)
 	list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
@@ -41,11 +39,14 @@ func AddPRComment(markdown string) {
 	}
 
 	if currentComment.Body == nil {
+		input := &gh.IssueComment{Body: &markdown}
 		_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 			fmt.Println(err)
 		}
 	} else {
-		_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID, input); if err != nil {
+		markdown = markdown + " \n Edited"
+		input := &gh.IssueComment{Body: &markdown}
+		_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID,input); if err != nil {
 			fmt.Println(err)
 		}
 	}
