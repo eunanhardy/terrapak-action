@@ -44,11 +44,13 @@ func AddPRComment(markdown string) {
 		_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 			fmt.Println(err)
 		}
+	} else {
+		_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID, input); if err != nil {
+			fmt.Println(err)
+		}
 	}
 
-	_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID, input); if err != nil {
-		fmt.Println(err)
-	}
+	
 }
 
 func DisplayPRResults(){
