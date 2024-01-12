@@ -45,7 +45,7 @@ func Run(){
 func onOpenedPR(){
 	
 	current_config, err := config.Load(); if err != nil {
-		fmt.Println("[ERROR] - Could not load config file")
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -56,7 +56,6 @@ func onOpenedPR(){
 	store.New()
 	for _, mod := range current_config.Modules {
 		changed := fileutils.HasChanges(mod.Path)
-		fmt.Printf("[DEBUG] - %s has changes: %t\n",mod.Name,changed)
 		if changed {
 			data , status, err := ms.Read(current_config.Terrapak.Hostname,&mod); if err != nil {
 				fmt.Println(err)
@@ -64,7 +63,9 @@ func onOpenedPR(){
 
 			switch(status){
 				case 404:
-					fmt.Println("Module not found")
+					fmt.Println("[LOG] - Module not found, uploading new module")
+					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: "New Version Published"}
+					result.Add()
 					module.Upload(current_config.Terrapak.Hostname,&mod)
 				break;
 				case 200:
@@ -99,7 +100,6 @@ func onMergedPR(){
 		if status == 200 {
 			if module.PublishedAt.Year() < 2000 {
 				comment := fmt.Sprintf("Module Published: `%s/%s/%s/%s/%s`",gc.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
-				fmt.Println("[DEBUG] - Module is a draft, publishing module")
 				ms.PublishModule(&mod)
 				github.AddPRComment(comment)
 			}

@@ -26,11 +26,13 @@ type ModuleModel struct {
 	Version     string `json:"version"`
 	DownloadCount  int `json:"download_count"`
 	PublishedAt time.Time `json:"published_at"`
+	Hash		string `json:"hash"`
 	Readme      string `json:"readme"`
 }
 
 type UploadRequestBody struct {
 	Readme string `json:"readme" form:"readme"`
+	Hash   string   `json:"hash" form:"hash"`
 }
 
 // Returns a ModuleModel struct and the status code of the request
@@ -73,7 +75,6 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 	}
 
 	if fileutils.FileExists(readme_path) {
-		fmt.Println("README.md exists for ",config.Name)
 		bytesReadme, err := os.ReadFile(readme_path); if err != nil {
 			color.Red("Error reading README.md")
 			return err
@@ -94,12 +95,7 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 	}
 
 	if resp.StatusCode() == 200 {
-		result := store.ResultStore{
-			Name: config.Name,
-			Version: config.Version,
-			Change: "Synced",
-		}
-		result.Add()
+		
 		os.Remove(filepath)
 	}
 	
@@ -114,9 +110,13 @@ func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleM
 			err := Upload(hostname,config); if err != nil {
 				color.Red("[LOG] - Error syncing module changes:%s\n",err)
 			}
+			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
+			result.Add()
 		}
 	} else {
 		fmt.Printf("[LOG] - Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
+		result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "New Version Required"}
+		result.Add()
 	}
 
 }
