@@ -32,7 +32,7 @@ func AddPRComment(markdown string) {
 	}
 	currentComment := gh.IssueComment{}
 	for _, comment := range list {
-		if strings.Contains(*comment.Body, "## Terrapak Sync") {
+		if strings.Contains(*comment.Body, "Terrapak Sync") {
 			currentComment = *comment
 			fmt.Println(currentComment.ID)
 			return
