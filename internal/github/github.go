@@ -39,7 +39,7 @@ func AddPRComment(markdown string) {
 			return
 		}
 	}
-	fmt.Println(currentComment)
+	fmt.Printf("%d:%v",*currentComment.ID,currentComment.Body)
 	if currentComment.Body == nil {
 		input := &gh.IssueComment{Body: &markdown}
 		_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
