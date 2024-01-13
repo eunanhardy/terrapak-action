@@ -31,6 +31,7 @@ func AddPRComment(markdown string) {
 		fmt.Println(err)
 	}
 	currentComment := gh.IssueComment{}
+	fmt.Println(list)
 	for _, comment := range list {
 		if strings.Contains(*comment.Body, "Terrapak Sync") {
 			currentComment = *comment
@@ -38,7 +39,7 @@ func AddPRComment(markdown string) {
 			return
 		}
 	}
-
+	fmt.Println(currentComment)
 	if currentComment.Body == nil {
 		input := &gh.IssueComment{Body: &markdown}
 		_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
