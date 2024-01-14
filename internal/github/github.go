@@ -13,7 +13,7 @@ import (
 
 const TABLE_TEMPLATE = `## Terrapak Sync
 Terrapak has detected changes in the following modules:
-| Module | Version | Action |
+| Module | Version | Info |
 | :---: | :---: | :---: |
 `
 

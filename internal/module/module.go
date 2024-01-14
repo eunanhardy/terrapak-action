@@ -61,14 +61,30 @@ func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status
 	return data, status, nil
 }
 
+func Pack(config *config.ModuleConfig)(string,error){
+	requestid := uuid.Must(uuid.NewV4())
+	localpath := fmt.Sprintf("/tmp/%s/",requestid)
+	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
+	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
+		fmt.Println(err)
+		return "",err
+	}
+	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
+		fmt.Println(err)
+		return "",err
+	}
+
+	return filepath,nil
+}
+
 func Upload(hostname string,config *config.ModuleConfig) error {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
 	requestid := uuid.Must(uuid.NewV4())
 	localpath := fmt.Sprintf("/tmp/%s/",requestid)
 	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
 	readme_path := fmt.Sprintf("%s/README.md",config.Path)
-	fmt.Println("readme path: ",readme_path)
 	uploadRequestBody := UploadRequestBody{}
+
 	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
 		fmt.Println(err)
 		return err
