@@ -1,8 +1,12 @@
 package module
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 
@@ -12,7 +16,6 @@ import (
 	"github.com/eunanhardy/terrapak-action/internal/http_client"
 
 	"github.com/fatih/color"
-	"github.com/go-resty/resty/v2"
 	"github.com/gofrs/uuid"
 )
 
@@ -79,17 +82,8 @@ func Pack(config *config.ModuleConfig)(string,error){
 
 func Upload(hostname string,config *config.ModuleConfig) error {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
-	requestid := uuid.Must(uuid.NewV4())
-	localpath := fmt.Sprintf("/tmp/%s/",requestid)
-	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
 	readme_path := fmt.Sprintf("%s/README.md",config.Path)
 	uploadRequestBody := UploadRequestBody{}
-
-	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
 	if fileutils.FileExists(readme_path) {
 		bytesReadme, err := os.ReadFile(readme_path); if err != nil {
 			color.Red("Error reading README.md")
@@ -99,20 +93,48 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 		uploadRequestBody.Readme = string(bytesReadme)
 	}
 
-	client := resty.New()
-	client.SetAuthToken(http_client.DefaultToken())
-	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
-		fmt.Println(err)
+	filepath,err := Pack(config); if err != nil {
 		return err
 	}
 
-	resp, err := client.R().SetFile("file",filepath).SetBody(uploadRequestBody).Post(endpoint); if err != nil {
-		fmt.Println(err)
+	buf := new(bytes.Buffer)
+	form := multipart.NewWriter(buf)
+
+	file, err := os.Open(filepath); if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := form.CreateFormFile("file",filepath); if err != nil {
+		return err
 	}
 
-	if resp.StatusCode() == 200 {
-		
-		os.Remove(filepath)
+	_, err = io.Copy(part,file); if err != nil {
+		return err
+	}
+
+	err = form.WriteField("readme",uploadRequestBody.Readme); if err != nil {
+		return err
+	}
+
+	err = form.Close(); if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
+		return err
+
+	}
+
+	req.Header.Set("Content-Type",form.FormDataContentType())
+
+	client := http_client.Default()
+	res, err := client.Do(req); if err != nil {
+		return err
+	}
+
+	if res.StatusCode == 200 {
+		fmt.Println("File Uploaded")
 	}
 	
 	return nil
