@@ -1,8 +1,12 @@
 package module
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 
@@ -12,7 +16,6 @@ import (
 	"github.com/eunanhardy/terrapak-action/internal/http_client"
 
 	"github.com/fatih/color"
-	"github.com/go-resty/resty/v2"
 	"github.com/gofrs/uuid"
 )
 
@@ -26,11 +29,13 @@ type ModuleModel struct {
 	Version     string `json:"version"`
 	DownloadCount  int `json:"download_count"`
 	PublishedAt time.Time `json:"published_at"`
+	Hash		string `json:"hash"`
 	Readme      string `json:"readme"`
 }
 
 type UploadRequestBody struct {
 	Readme string `json:"readme" form:"readme"`
+	Hash   string   `json:"hash" form:"hash"`
 }
 
 // Returns a ModuleModel struct and the status code of the request
@@ -59,50 +64,77 @@ func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status
 	return data, status, nil
 }
 
-func Upload(hostname string,config *config.ModuleConfig) error {
-	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
+func Pack(config *config.ModuleConfig)(string,error){
 	requestid := uuid.Must(uuid.NewV4())
 	localpath := fmt.Sprintf("/tmp/%s/",requestid)
 	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
-	readme_path := fmt.Sprintf("%s/README.md",config.Path)
-	fmt.Println("readme path: ",readme_path)
-	uploadRequestBody := UploadRequestBody{}
 	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
 		fmt.Println(err)
-		return err
+		return "",err
+	}
+	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
+		fmt.Println(err)
+		return "",err
 	}
 
+	return filepath,nil
+}
+
+func Upload(hostname string,config *config.ModuleConfig) error {
+	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
+	readme_path := fmt.Sprintf("%s/README.md",config.Path)
+	uploadRequestBody := UploadRequestBody{}
 	if fileutils.FileExists(readme_path) {
-		fmt.Println("README.md exists for ",config.Name)
 		bytesReadme, err := os.ReadFile(readme_path); if err != nil {
 			color.Red("Error reading README.md")
 			return err
 		}
 
 		uploadRequestBody.Readme = string(bytesReadme)
-		color.Yellow(string(bytesReadme))
 	}
 
-	client := resty.New()
-	client.SetAuthToken(http_client.DefaultToken())
-	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
-		fmt.Println(err)
+	filepath,err := Pack(config); if err != nil {
 		return err
 	}
 
-	resp, err := client.R().SetFile("file",filepath).SetBody(uploadRequestBody).Post(endpoint); if err != nil {
-		fmt.Println(err)
+	buf := new(bytes.Buffer)
+	form := multipart.NewWriter(buf)
+
+	file, err := os.Open(filepath); if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	part, err := form.CreateFormFile("file",filepath); if err != nil {
+		return err
 	}
 
-	if resp.StatusCode() == 200 {
-		color.Green("Module Synced: ",config.Name)
-		result := store.ResultStore{
-			Name: config.Name,
-			Version: config.Version,
-			Change: "Synced",
-		}
-		result.Add()
-		os.Remove(filepath)
+	_, err = io.Copy(part,file); if err != nil {
+		return err
+	}
+
+	err = form.WriteField("readme",uploadRequestBody.Readme); if err != nil {
+		return err
+	}
+
+	err = form.Close(); if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
+		return err
+
+	}
+
+	req.Header.Set("Content-Type",form.FormDataContentType())
+
+	client := http_client.Default()
+	res, err := client.Do(req); if err != nil {
+		return err
+	}
+
+	if res.StatusCode == 200 {
+		fmt.Println("File Uploaded")
 	}
 	
 	return nil
@@ -112,14 +144,17 @@ func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleM
 	has_chanaged := fileutils.HasPreviousChanges(config.Path)
 
 	if data.PublishedAt.Year() < 2000 {
-		color.Yellow("Syncing module changes: " + config.Name)
 		if has_chanaged {
 			err := Upload(hostname,config); if err != nil {
-				color.Red("Error syncing module changes:%s\n",err)
+				color.Red("[LOG] - Error syncing module changes:%s\n",err)
 			}
+			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
+			result.Add()
 		}
 	} else {
-		color.Yellow("Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
+		fmt.Printf("[LOG] - Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
+		result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "New Version Required"}
+		result.Add()
 	}
 
 }
@@ -134,7 +169,7 @@ func PublishModule(module *config.ModuleConfig){
 	}
 
 	if resp.StatusCode == 200 {
-		color.Green("module published: %s",module.Name)
+		fmt.Printf("module published: %s",module.Name)
 	}
 
 }

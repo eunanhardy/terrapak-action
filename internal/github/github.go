@@ -1,47 +1,67 @@
 package github
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/github/store"
+	gh "github.com/google/go-github/v58/github"
 )
 
 const TABLE_TEMPLATE = `## Terrapak Sync
-Changes detected in the following modules.
-| Module | Version | Action |
-| --- | --- | --- |\n
+Terrapak has detected changes in the following modules:
+| Module | Version | Info |
+| :---: | :---: | :---: |
 `
 
 func AddPRComment(markdown string) {
 	token := os.Getenv("INPUT_GITHUB_TOKEN")
-	owner := os.Getenv("INPUT_REPO_NAME")
-	pr_number := os.Getenv("INPUT_ISSUE_NUMBER")
-	endpoint := fmt.Sprintf("https://api.github.com/repos/%s/issues/%s/comments", owner, pr_number)
-	body := fmt.Sprintf(`{"body": "%s"}`, markdown)
-
-	req, err := http.NewRequest("POST", endpoint, strings.NewReader(body)); if err != nil {
+	repoowner := os.Getenv("INPUT_REPO_NAME")
+	owner := strings.Split(repoowner, "/")[0]
+	repo := strings.Split(repoowner, "/")[1]
+	pr_number, err := strconv.Atoi(os.Getenv("INPUT_ISSUE_NUMBER")); if err != nil {
+		fmt.Println(err)
+	}
+	ctx := context.Background()
+	client := gh.NewTokenClient(ctx, token)
+	input := &gh.IssueComment{Body: &markdown}
+	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 		fmt.Println(err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", token))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+	// list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// currentComment := gh.IssueComment{}
+	// fmt.Println(list)
+	// for _, comment := range list {
+	// 	if strings.Contains(*comment.Body, "Terrapak Sync") {
+	// 		currentComment = *comment
+	// 		fmt.Println(currentComment.ID)
+	// 		return
+	// 	}
+	// }
 
-	client := &http.Client{}
-	resp, err := client.Do(req); if err != nil {
-		fmt.Println(err)
-	}
-
-
-	defer resp.Body.Close()
-
+	// fmt.Printf("%d:%v",*currentComment.ID,currentComment.Body)
+	// if currentComment.Body == nil {
+	// 	input := &gh.IssueComment{Body: &markdown}
+	// 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// } else {
+	// 	markdown = markdown + " \n Edited"
+	// 	input := &gh.IssueComment{Body: &markdown}
+	// 	_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID,input); if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// }
 }
 
 func DisplayPRResults(){
 	results_template := TABLE_TEMPLATE + store.Print()
+	fmt.Println(results_template)
 	AddPRComment(results_template)
 }

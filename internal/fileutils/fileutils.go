@@ -2,6 +2,8 @@ package fileutils
 
 import (
 	"archive/zip"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -69,6 +71,19 @@ func HasPreviousChanges(path string) bool {
     }else {
         return false
     }
+}
+
+func HashFile(path string) (string, error) {
+    file, err := os.Open(path); if err != nil {
+        return "", err
+    }
+    defer file.Close()
+    hash := sha256.New()
+    if _, err := io.Copy(hash, file); err != nil {
+        return "", err
+    }
+    
+    return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 func IsRemote(path string) (bool) {
