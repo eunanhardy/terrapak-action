@@ -29,7 +29,7 @@ type ModuleModel struct {
 	Version     string `json:"version"`
 	DownloadCount  int `json:"download_count"`
 	PublishedAt time.Time `json:"published_at"`
-	Hash		string `json:"hash"`
+	Hash		string 	`json:"sha_checksum"`
 	Readme      string `json:"readme"`
 }
 
