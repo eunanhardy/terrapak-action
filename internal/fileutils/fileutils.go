@@ -69,7 +69,7 @@ func HasFileChanges(config *config.ModuleConfig, hash string) (bool,error) {
     err = os.Remove(filepath); if err != nil {
         return false,fmt.Errorf("Error Removing local file")
     }
-    fmt.Printf("Remote: %s - Local: %s",hash, local_hash)
+    fmt.Printf("Remote: %s - Local: %s \n",hash, local_hash)
 
     if local_hash == hash {
         return false,nil
