@@ -10,6 +10,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+
+	"github.com/eunanhardy/terrapak-action/internal/config"
+	"github.com/gofrs/uuid"
 )
 
 /*
@@ -59,6 +62,21 @@ func HasChanges(path string) bool {
     }
 }
 
+func HasFileChanges (config *config.ModuleConfig, hash string) (bool,error) {
+    filepath, local_hash, err := Pack(config); if err != nil {
+        return false,nil
+    }
+    err = os.Remove(filepath); if err != nil {
+        return false,fmt.Errorf("Error Removing local file")
+    }
+
+    if local_hash == hash {
+        return false,nil
+    } else {
+        return true,nil
+    }
+}
+
 func HasPreviousChanges(path string) bool {
     cmd := []string{"git", "diff","--compact-summary", "HEAD","HEAD^","--",path}
 
@@ -71,6 +89,25 @@ func HasPreviousChanges(path string) bool {
     }else {
         return false
     }
+}
+
+func Pack(config *config.ModuleConfig)(string,string,error){
+	requestid := uuid.Must(uuid.NewV4())
+	localpath := fmt.Sprintf("/tmp/%s/",requestid)
+	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
+	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
+		fmt.Println(err)
+		return "","",err
+	}
+	err = ZipDir(config.Path,filepath); if err != nil {
+		fmt.Println(err)
+		return "","",err
+	}
+	hash, err := HashFile(filepath); if err != nil {
+
+	}
+
+	return filepath,hash,nil
 }
 
 func HashFile(path string) (string, error) {

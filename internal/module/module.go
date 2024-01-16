@@ -59,25 +59,6 @@ func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status
 	return data, status, nil
 }
 
-func Pack(config *config.ModuleConfig)(string,string,error){
-	requestid := uuid.Must(uuid.NewV4())
-	localpath := fmt.Sprintf("/tmp/%s/",requestid)
-	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
-	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
-		fmt.Println(err)
-		return "","",err
-	}
-	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
-		fmt.Println(err)
-		return "","",err
-	}
-	hash, err := fileutils.HashFile(filepath); if err != nil {
-
-	}
-
-	return filepath,hash,nil
-}
-
 func Upload(hostname string,config *config.ModuleConfig) error {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
 	readme_path := fmt.Sprintf("%s/README.md",config.Path)
@@ -90,7 +71,7 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 		readme_content = string(bytesReadme)
 	}
 
-	filepath, hash, err := Pack(config); if err != nil {
+	filepath, hash, err := fileutils.Pack(config); if err != nil {
 		return err
 	}
 
@@ -106,12 +87,14 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 }
 
 func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleModel) {
-	has_chanaged := fileutils.HasPreviousChanges(config.Path)
+	has_chanaged, err := fileutils.HasFileChanges(config,data.Hash); if err != nil {
+		fmt.Println("Error Detecting file changes")
+	}
 
 	if data.PublishedAt.Year() < 2000 {
 		if has_chanaged {
 			err := Upload(hostname,config); if err != nil {
-				color.Red("[LOG] - Error syncing module changes:%s\n",err)
+				fmt.Printf("[LOG] - Error syncing module changes:%s\n",err)
 			}
 			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
 			result.Add()
