@@ -94,48 +94,12 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 		return err
 	}
 
-	buf := new(bytes.Buffer)
-	form := multipart.NewWriter(buf)
-
-	file, err := os.Open(filepath); if err != nil {
-		return err
+	status, err := handleFileUpload(endpoint,filepath,hash,readme_content); if err != nil {
+		return fmt.Errorf("Error Uploading file: " + err.Error())
 	}
-	defer file.Close()
-
-	part, err := form.CreateFormFile("file",filepath); if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(part,file); if err != nil {
-		return err
-	}
-
-	err = form.WriteField("readme",readme_content); if err != nil {
-		return err
-	}
-
-	err = form.WriteField("hash",hash); if err != nil {
-		return nil
-	}
-
-	err = form.Close(); if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
-		return err
-
-	}
-
-	req.Header.Set("Content-Type",form.FormDataContentType())
-
-	client := http_client.Default()
-	res, err := client.Do(req); if err != nil {
-		return err
-	}
-
-	if res.StatusCode == 200 {
-		fmt.Println("File Uploaded")
+	
+	if status == 200 {
+		fmt.Println("Module Uploaded")
 	}
 	
 	return nil
@@ -188,4 +152,49 @@ func RemoveDraft(module *config.ModuleConfig){
 		fmt.Printf("[DEBUG] - %s draft removed",module.Name)
 	}
 
+}
+
+func handleFileUpload(endpoint, filepath, hash, readme string) (int,error){
+	
+	buf := new(bytes.Buffer)
+	form := multipart.NewWriter(buf)
+
+	file, err := os.Open(filepath); if err != nil {
+		return 500,err
+	}
+	defer file.Close()
+
+	part, err := form.CreateFormFile("file",filepath); if err != nil {
+		return 500,err
+	}
+
+	_, err = io.Copy(part,file); if err != nil {
+		return 500,err
+	}
+
+	err = form.WriteField("readme",readme); if err != nil {
+		return 500,err
+	}
+
+	err = form.WriteField("hash",hash); if err != nil {
+		return 500,nil
+	}
+
+	err = form.Close(); if err != nil {
+		return 500,err
+	}
+
+	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
+		return 500,err
+
+	}
+
+	req.Header.Set("Content-Type",form.FormDataContentType())
+
+	client := http_client.Default()
+	res, err := client.Do(req); if err != nil {
+		return 500,err
+	}
+
+	return res.StatusCode,nil
 }
