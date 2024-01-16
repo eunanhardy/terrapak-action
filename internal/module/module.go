@@ -33,11 +33,6 @@ type ModuleModel struct {
 	Readme      string `json:"readme"`
 }
 
-type UploadRequestBody struct {
-	Readme string `json:"readme" form:"readme"`
-	Hash   string   `json:"hash" form:"hash"`
-}
-
 // Returns a ModuleModel struct and the status code of the request
 func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status int, response_err error) {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
@@ -64,36 +59,38 @@ func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status
 	return data, status, nil
 }
 
-func Pack(config *config.ModuleConfig)(string,error){
+func Pack(config *config.ModuleConfig)(string,string,error){
 	requestid := uuid.Must(uuid.NewV4())
 	localpath := fmt.Sprintf("/tmp/%s/",requestid)
 	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
 	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
 		fmt.Println(err)
-		return "",err
+		return "","",err
 	}
 	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
 		fmt.Println(err)
-		return "",err
+		return "","",err
+	}
+	hash, err := fileutils.HashFile(filepath); if err != nil {
+
 	}
 
-	return filepath,nil
+	return filepath,hash,nil
 }
 
 func Upload(hostname string,config *config.ModuleConfig) error {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
 	readme_path := fmt.Sprintf("%s/README.md",config.Path)
-	uploadRequestBody := UploadRequestBody{}
+	var readme_content string
 	if fileutils.FileExists(readme_path) {
 		bytesReadme, err := os.ReadFile(readme_path); if err != nil {
-			color.Red("Error reading README.md")
 			return err
 		}
 
-		uploadRequestBody.Readme = string(bytesReadme)
+		readme_content = string(bytesReadme)
 	}
 
-	filepath,err := Pack(config); if err != nil {
+	filepath, hash, err := Pack(config); if err != nil {
 		return err
 	}
 
@@ -113,8 +110,12 @@ func Upload(hostname string,config *config.ModuleConfig) error {
 		return err
 	}
 
-	err = form.WriteField("readme",uploadRequestBody.Readme); if err != nil {
+	err = form.WriteField("readme",readme_content); if err != nil {
 		return err
+	}
+
+	err = form.WriteField("hash",hash); if err != nil {
+		return nil
 	}
 
 	err = form.Close(); if err != nil {
