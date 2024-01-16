@@ -61,7 +61,12 @@ func AddPRComment(markdown string) {
 }
 
 func DisplayPRResults(){
-	results_template := TABLE_TEMPLATE + store.Print()
-	fmt.Println(results_template)
-	AddPRComment(results_template)
+	output := store.Print()
+	if output != "" {
+		results_template := TABLE_TEMPLATE + output
+		AddPRComment(results_template)
+	} else {
+		results_template := "## Terrapak Sync \n No Changes Detected"
+		AddPRComment(results_template)
+	}
 }

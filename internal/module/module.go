@@ -98,6 +98,9 @@ func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleM
 			}
 			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
 			result.Add()
+		} else {
+			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "No Changes"}
+			result.Add()
 		}
 	} else {
 		fmt.Printf("[LOG] - Changes detected in %s, but the module is already published, Create a new version to apply changes",config.Name)
