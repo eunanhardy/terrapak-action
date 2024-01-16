@@ -3,12 +3,15 @@ package fileutils
 import (
 	"archive/zip"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/config"
 	"github.com/gofrs/uuid"
@@ -104,27 +107,44 @@ func Pack(config *config.ModuleConfig)(string,string,error){
 		fmt.Println(err)
 		return "","",err
 	}
-	hash, err := HashFile(filepath); if err != nil {
+	hash, err := HashFiles(filepath); if err != nil {
         return "","", err
 	}
 
 	return filepath,hash,nil
 }
 
-func HashFile(path string) (string, error) {
-    f, err := os.Open(path)
-    if err != nil {
-        return "",err
-    }
-    defer f.Close()
+func HashFiles(dirpath string) (string, error) {
+    var fileHashes []string
+    err := filepath.Walk(dirpath, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
 
-    h := sha256.New()
-    if _, err := io.Copy(h, f); err != nil {
-        return "",err
+        if info.IsDir() {
+            return nil
+        }
+
+        data, err := os.ReadFile(path)
+        if err != nil {
+            return err
+        }
         
+        hash := sha256.Sum256(data)
+        fileHashes = append(fileHashes, hex.EncodeToString(hash[:]))
+
+        return nil
+    })
+
+    if err != nil {
+        return "", err
     }
-    
-    return fmt.Sprintf("%x",h.Sum(nil)), nil
+
+    sort.Strings(fileHashes)
+
+    hash := sha256.Sum256([]byte(strings.Join(fileHashes, "")))
+
+    return hex.EncodeToString(hash[:]), nil
 }
 
 func IsRemote(path string) (bool) {
