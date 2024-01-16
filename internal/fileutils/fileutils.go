@@ -62,7 +62,7 @@ func HasChanges(path string) bool {
     }
 }
 
-func HasFileChanges (config *config.ModuleConfig, hash string) (bool,error) {
+func HasFileChanges(config *config.ModuleConfig, hash string) (bool,error) {
     
     filepath, local_hash, err := Pack(config); if err != nil {
         return false,nil
@@ -113,16 +113,19 @@ func Pack(config *config.ModuleConfig)(string,string,error){
 }
 
 func HashFile(path string) (string, error) {
-    file, err := os.Open(path); if err != nil {
-        return "", err
+    f, err := os.Open(path)
+    if err != nil {
+        return "",err
     }
-    defer file.Close()
-    hash := sha256.New()
-    if _, err := io.Copy(hash, file); err != nil {
-        return "", err
+    defer f.Close()
+
+    h := sha256.New()
+    if _, err := io.Copy(h, f); err != nil {
+        return "",err
+        
     }
     
-    return hex.EncodeToString(hash.Sum(nil)), nil
+    return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func IsRemote(path string) (bool) {
