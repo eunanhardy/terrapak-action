@@ -105,7 +105,7 @@ func Pack(config *config.ModuleConfig)(string,string,error){
 		return "","",err
 	}
 	hash, err := HashFile(filepath); if err != nil {
-
+        return "","", err
 	}
 
 	return filepath,hash,nil
@@ -124,7 +124,7 @@ func HashFile(path string) (string, error) {
         
     }
     
-    return fmt.Sprintf("%s",h.Sum(nil)), nil
+    return fmt.Sprintf("%x",h.Sum(nil)), nil
 }
 
 func IsRemote(path string) (bool) {
