@@ -107,7 +107,7 @@ func Pack(config *config.ModuleConfig)(string,string,error){
 		fmt.Println(err)
 		return "","",err
 	}
-	hash, err := HashFiles(filepath); if err != nil {
+	hash, err := HashFiles(config.Path); if err != nil {
         return "","", err
 	}
 
@@ -141,7 +141,6 @@ func HashFiles(dirpath string) (string, error) {
     }
 
     sort.Strings(fileHashes)
-
     hash := sha256.Sum256([]byte(strings.Join(fileHashes, "")))
 
     return hex.EncodeToString(hash[:]), nil
