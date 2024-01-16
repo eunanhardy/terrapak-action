@@ -1,5 +1,5 @@
 # Terrapak for Github Actions
-This action integrates Terrapak module management into your Github pull request workflow. Automatically create and update versions of your terraform modules and publish them to the terrapak registry.
+This action integrates with your GitHub pull requests to automatically publish new versions of your Terraform modules in conjunction with [Terrapak](https://github.com/eunanhardy/terrapak)
 
 ## Getting Started
 
