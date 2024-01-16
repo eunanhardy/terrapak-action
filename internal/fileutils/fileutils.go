@@ -3,7 +3,6 @@ package fileutils
 import (
 	"archive/zip"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -125,7 +124,7 @@ func HashFile(path string) (string, error) {
         
     }
     
-    return hex.EncodeToString(h.Sum(nil)), nil
+    return fmt.Sprintf("%s",h.Sum(nil)), nil
 }
 
 func IsRemote(path string) (bool) {
