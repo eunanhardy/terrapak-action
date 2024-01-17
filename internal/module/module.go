@@ -99,7 +99,7 @@ func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleM
 			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
 			result.Add()
 		} else {
-			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "No Changes"}
+			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "No Changes in last commit"}
 			result.Add()
 		}
 	} else {
