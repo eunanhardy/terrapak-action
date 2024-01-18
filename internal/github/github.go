@@ -28,6 +28,7 @@ func AddPRComment(markdown string) {
 	ctx := context.Background()
 	client := gh.NewTokenClient(ctx, token)
 	input := &gh.IssueComment{Body: &markdown}
+	removePreviousComment(client,owner, repo, pr_number)
 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 		fmt.Println(err)
 	}
@@ -58,6 +59,27 @@ func AddPRComment(markdown string) {
 	// 		fmt.Println(err)
 	// 	}
 	// }
+}
+
+func removePreviousComment(client *gh.Client, owner string, repo string, pr_number int) {
+	ctx := context.Background()
+	list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
+		fmt.Println(err)
+	}
+	currentComment := gh.IssueComment{}
+	fmt.Println(list)
+	for _, comment := range list {
+		if strings.Contains(*comment.Body, "## Terrapak Sync") {
+			currentComment = *comment
+			fmt.Println(currentComment.ID)
+			return
+		}
+	}
+	if currentComment.ID != nil {
+		_,err := client.Issues.DeleteComment(ctx,owner, repo, *currentComment.ID); if err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 func DisplayPRResults(){
