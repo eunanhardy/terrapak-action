@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/github/store"
 	ms "github.com/eunanhardy/terrapak-action/internal/module"
@@ -21,6 +22,7 @@ func Run(){
 		fmt.Println("[ERROR] - Terrapak token not found")
 		return
 	}
+
 	http_client.New(token)
 
 	color.NoColor = false
@@ -99,7 +101,8 @@ func onMergedPR(){
 
 		if status == 200 {
 			if module.PublishedAt.Year() < 2000 {
-				comment := fmt.Sprintf("Module Published: `%s/%s/%s/%s/%s`",gc.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
+				hostname := strings.Replace(gc.Terrapak.Hostname,"https://","",-1)
+				comment := fmt.Sprintf("Module Published\n ``%s/%s/%s/%s/%s``",hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
 				ms.PublishModule(&mod)
 				github.AddPRComment(comment)
 			}
@@ -118,7 +121,6 @@ func onClosedPR(){
 		fmt.Println("[ERROR] - Terrapak service is down, cannot cleanup module")
 		os.Exit(1)
 	}
-
 
 	github.AddPRComment("## Terrapak \n Removing draft module versions...")
 	for _, mod := range current_config.Modules {
