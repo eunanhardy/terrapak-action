@@ -32,33 +32,6 @@ func AddPRComment(markdown string) {
 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 		fmt.Println(err)
 	}
-
-	// list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// currentComment := gh.IssueComment{}
-	// fmt.Println(list)
-	// for _, comment := range list {
-	// 	if strings.Contains(*comment.Body, "Terrapak Sync") {
-	// 		currentComment = *comment
-	// 		fmt.Println(currentComment.ID)
-	// 		return
-	// 	}
-	// }
-
-	// fmt.Printf("%d:%v",*currentComment.ID,currentComment.Body)
-	// if currentComment.Body == nil {
-	// 	input := &gh.IssueComment{Body: &markdown}
-	// 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// } else {
-	// 	markdown = markdown + " \n Edited"
-	// 	input := &gh.IssueComment{Body: &markdown}
-	// 	_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID,input); if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// }
 }
 
 func removePreviousComment(client *gh.Client, owner string, repo string, pr_number int) {
@@ -86,9 +59,6 @@ func DisplayPRResults(){
 	output := store.Print()
 	if output != "" {
 		results_template := TABLE_TEMPLATE + output
-		AddPRComment(results_template)
-	} else {
-		results_template := "## Terrapak Sync \n No Changes Detected"
 		AddPRComment(results_template)
 	}
 }

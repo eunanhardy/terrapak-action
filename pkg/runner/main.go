@@ -64,7 +64,7 @@ func onOpenedPR(){
 			switch(status){
 				case 404:
 					fmt.Println("[LOG] - Module not found, uploading new module")
-					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: "New Version Published"}
+					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: fmt.Sprintf("New Version Published: %s/%s/%s/%s",current_config.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider)}
 					result.Add()
 					module.Upload(current_config.Terrapak.Hostname,&mod)
 				break;
@@ -119,6 +119,8 @@ func onClosedPR(){
 		os.Exit(1)
 	}
 
+
+	github.AddPRComment("## Terrapak \n Removing draft module versions...")
 	for _, mod := range current_config.Modules {
 		module,status, err := ms.Read(current_config.Terrapak.Hostname,&mod); if err != nil {
 			fmt.Println(err)
