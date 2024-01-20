@@ -3,7 +3,6 @@ package runner
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/eunanhardy/terrapak-action/internal/github/store"
 	ms "github.com/eunanhardy/terrapak-action/internal/module"
@@ -45,7 +44,6 @@ func Run(){
 }
 
 func onOpenedPR(){
-	
 	current_config, err := config.Load(); if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -101,8 +99,7 @@ func onMergedPR(){
 
 		if status == 200 {
 			if module.PublishedAt.Year() < 2000 {
-				hostname := strings.Replace(gc.Terrapak.Hostname,"https://","",-1)
-				comment := fmt.Sprintf("Module Published\n ``%s/%s/%s/%s/%s``",hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
+				comment := fmt.Sprintf("Module Published: ``%s/%s/%s/%s/%s``",gc.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
 				ms.PublishModule(&mod)
 				github.AddPRComment(comment)
 			}
