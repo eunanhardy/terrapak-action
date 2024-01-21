@@ -21,6 +21,15 @@ module "aws-bucket" {
 
 ```
 
+Example usage as module source:
+```hcl
+module "bucket" {
+    source = "terrapak.dev/myorg/aws-bucket/aws"
+    version = "1.0.0"
+    bucket_name = "my-bucket"
+}
+```
+
 
 ### Requirements
 To use this action you must first setup a instance of [Terrapak](https://github.com/eunanhardy/terrapak)
@@ -93,6 +102,3 @@ jobs:
         with:
           action: merged
 ```
-
-> [!NOTE]  
-> This project is currently in development and not ready for production use.
