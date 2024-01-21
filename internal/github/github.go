@@ -28,40 +28,37 @@ func AddPRComment(markdown string) {
 	ctx := context.Background()
 	client := gh.NewTokenClient(ctx, token)
 	input := &gh.IssueComment{Body: &markdown}
+	removePreviousComment(client,owner, repo, pr_number)
 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
 		fmt.Println(err)
 	}
+}
 
-	// list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// currentComment := gh.IssueComment{}
-	// fmt.Println(list)
-	// for _, comment := range list {
-	// 	if strings.Contains(*comment.Body, "Terrapak Sync") {
-	// 		currentComment = *comment
-	// 		fmt.Println(currentComment.ID)
-	// 		return
-	// 	}
-	// }
-
-	// fmt.Printf("%d:%v",*currentComment.ID,currentComment.Body)
-	// if currentComment.Body == nil {
-	// 	input := &gh.IssueComment{Body: &markdown}
-	// 	_,_, err = client.Issues.CreateComment(ctx,owner, repo, pr_number, input); if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// } else {
-	// 	markdown = markdown + " \n Edited"
-	// 	input := &gh.IssueComment{Body: &markdown}
-	// 	_,_, err = client.Issues.EditComment(ctx,owner, repo, *currentComment.ID,input); if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// }
+func removePreviousComment(client *gh.Client, owner string, repo string, pr_number int) {
+	ctx := context.Background()
+	list,_,err := client.Issues.ListComments(ctx,owner, repo, pr_number, nil); if err != nil {
+		fmt.Println(err)
+	}
+	currentComment := gh.IssueComment{}
+	fmt.Println(list)
+	for _, comment := range list {
+		if strings.Contains(*comment.Body, "## Terrapak Sync") {
+			currentComment = *comment
+			fmt.Println(currentComment.ID)
+			return
+		}
+	}
+	if currentComment.ID != nil {
+		_,err := client.Issues.DeleteComment(ctx,owner, repo, *currentComment.ID); if err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 func DisplayPRResults(){
-	results_template := TABLE_TEMPLATE + store.Print()
-	fmt.Println(results_template)
-	AddPRComment(results_template)
+	output := store.Print()
+	if output != "" {
+		results_template := TABLE_TEMPLATE + output
+		AddPRComment(results_template)
+	}
 }

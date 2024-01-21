@@ -29,13 +29,8 @@ type ModuleModel struct {
 	Version     string `json:"version"`
 	DownloadCount  int `json:"download_count"`
 	PublishedAt time.Time `json:"published_at"`
-	Hash		string `json:"hash"`
+	Hash		string 	`json:"sha_checksum"`
 	Readme      string `json:"readme"`
-}
-
-type UploadRequestBody struct {
-	Readme string `json:"readme" form:"readme"`
-	Hash   string   `json:"hash" form:"hash"`
 }
 
 // Returns a ModuleModel struct and the status code of the request
@@ -64,91 +59,47 @@ func Read(hostname string,config *config.ModuleConfig) (data ModuleModel, status
 	return data, status, nil
 }
 
-func Pack(config *config.ModuleConfig)(string,error){
-	requestid := uuid.Must(uuid.NewV4())
-	localpath := fmt.Sprintf("/tmp/%s/",requestid)
-	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
-	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
-		fmt.Println(err)
-		return "",err
-	}
-	err = fileutils.ZipDir(config.Path,filepath); if err != nil {
-		fmt.Println(err)
-		return "",err
-	}
-
-	return filepath,nil
-}
-
 func Upload(hostname string,config *config.ModuleConfig) error {
 	endpoint := fmt.Sprintf("%s/v1/api/%s/%s/%s/%s/upload",hostname,config.GetNamespace(config.Namespace),config.Name,config.Provider,config.Version)
 	readme_path := fmt.Sprintf("%s/README.md",config.Path)
-	uploadRequestBody := UploadRequestBody{}
+	var readme_content string
 	if fileutils.FileExists(readme_path) {
 		bytesReadme, err := os.ReadFile(readme_path); if err != nil {
-			color.Red("Error reading README.md")
 			return err
 		}
 
-		uploadRequestBody.Readme = string(bytesReadme)
+		readme_content = string(bytesReadme)
 	}
 
-	filepath,err := Pack(config); if err != nil {
+	filepath, hash, err := fileutils.Pack(config); if err != nil {
 		return err
 	}
 
-	buf := new(bytes.Buffer)
-	form := multipart.NewWriter(buf)
-
-	file, err := os.Open(filepath); if err != nil {
-		return err
+	status, err := handleFileUpload(endpoint,filepath,hash,readme_content); if err != nil {
+		return fmt.Errorf("Error Uploading file: " + err.Error())
 	}
-	defer file.Close()
-
-	part, err := form.CreateFormFile("file",filepath); if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(part,file); if err != nil {
-		return err
-	}
-
-	err = form.WriteField("readme",uploadRequestBody.Readme); if err != nil {
-		return err
-	}
-
-	err = form.Close(); if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
-		return err
-
-	}
-
-	req.Header.Set("Content-Type",form.FormDataContentType())
-
-	client := http_client.Default()
-	res, err := client.Do(req); if err != nil {
-		return err
-	}
-
-	if res.StatusCode == 200 {
-		fmt.Println("File Uploaded")
+	
+	if status == 200 {
+		fmt.Println("Module Uploaded")
 	}
 	
 	return nil
 }
 
 func ModuleDraftCheck(hostname string, config *config.ModuleConfig, data ModuleModel) {
-	has_chanaged := fileutils.HasPreviousChanges(config.Path)
-
+	has_chanaged, err := fileutils.HasFileChanges(config,data.Hash); if err != nil {
+		fmt.Println("Error Detecting file changes")
+	}
+	
 	if data.PublishedAt.Year() < 2000 {
 		if has_chanaged {
 			err := Upload(hostname,config); if err != nil {
-				color.Red("[LOG] - Error syncing module changes:%s\n",err)
+				fmt.Printf("[LOG] - Error syncing module changes:%s\n",err)
 			}
 			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "Changes applied"}
+			result.Add()
+		} else {
+			result := store.ResultStore{Name: config.Name, Version: config.Version, Change: "No Changes in last commit"}
 			result.Add()
 		}
 	} else {
@@ -187,4 +138,49 @@ func RemoveDraft(module *config.ModuleConfig){
 		fmt.Printf("[DEBUG] - %s draft removed",module.Name)
 	}
 
+}
+
+func handleFileUpload(endpoint, filepath, hash, readme string) (int,error){
+	
+	buf := new(bytes.Buffer)
+	form := multipart.NewWriter(buf)
+
+	file, err := os.Open(filepath); if err != nil {
+		return 500,err
+	}
+	defer file.Close()
+
+	part, err := form.CreateFormFile("file",filepath); if err != nil {
+		return 500,err
+	}
+
+	_, err = io.Copy(part,file); if err != nil {
+		return 500,err
+	}
+
+	err = form.WriteField("readme",readme); if err != nil {
+		return 500,err
+	}
+
+	err = form.WriteField("hash",hash); if err != nil {
+		return 500,nil
+	}
+
+	err = form.Close(); if err != nil {
+		return 500,err
+	}
+
+	req, err := http.NewRequest("POST",endpoint,buf); if err != nil {
+		return 500,err
+
+	}
+
+	req.Header.Set("Content-Type",form.FormDataContentType())
+
+	client := http_client.Default()
+	res, err := client.Do(req); if err != nil {
+		return 500,err
+	}
+
+	return res.StatusCode,nil
 }

@@ -10,6 +10,11 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/eunanhardy/terrapak-action/internal/config"
+	"github.com/gofrs/uuid"
 )
 
 /*
@@ -59,6 +64,21 @@ func HasChanges(path string) bool {
     }
 }
 
+func HasFileChanges(config *config.ModuleConfig, hash string) (bool,error) {
+    
+    local_hash, err  := HashFiles(config.Path); if err != nil {
+        return false, err
+    }
+    
+    fmt.Printf("Remote: %s - Local: %s \n",hash, local_hash)
+
+    if local_hash == hash {
+        return false,nil
+    } else {
+        return true,nil
+    }
+}
+
 func HasPreviousChanges(path string) bool {
     cmd := []string{"git", "diff","--compact-summary", "HEAD","HEAD^","--",path}
 
@@ -73,17 +93,55 @@ func HasPreviousChanges(path string) bool {
     }
 }
 
-func HashFile(path string) (string, error) {
-    file, err := os.Open(path); if err != nil {
+func Pack(config *config.ModuleConfig)(string,string,error){
+	requestid := uuid.Must(uuid.NewV4())
+	localpath := fmt.Sprintf("/tmp/%s/",requestid)
+	filepath := fmt.Sprintf("%s/%s.zip",localpath,config.Name)
+	err := os.MkdirAll(localpath,os.ModePerm); if err != nil {
+		fmt.Println(err)
+		return "","",err
+	}
+	err = ZipDir(config.Path,filepath); if err != nil {
+		fmt.Println(err)
+		return "","",err
+	}
+	hash, err := HashFiles(config.Path); if err != nil {
+        return "","", err
+	}
+
+	return filepath,hash,nil
+}
+
+func HashFiles(dirpath string) (string, error) {
+    var fileHashes []string
+    err := filepath.Walk(dirpath, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+
+        if info.IsDir() {
+            return nil
+        }
+
+        data, err := os.ReadFile(path)
+        if err != nil {
+            return err
+        }
+        
+        hash := sha256.Sum256(data)
+        fileHashes = append(fileHashes, hex.EncodeToString(hash[:]))
+
+        return nil
+    })
+
+    if err != nil {
         return "", err
     }
-    defer file.Close()
-    hash := sha256.New()
-    if _, err := io.Copy(hash, file); err != nil {
-        return "", err
-    }
-    
-    return hex.EncodeToString(hash.Sum(nil)), nil
+
+    sort.Strings(fileHashes)
+    hash := sha256.Sum256([]byte(strings.Join(fileHashes, "")))
+
+    return hex.EncodeToString(hash[:]), nil
 }
 
 func IsRemote(path string) (bool) {

@@ -21,6 +21,7 @@ func Run(){
 		fmt.Println("[ERROR] - Terrapak token not found")
 		return
 	}
+
 	http_client.New(token)
 
 	color.NoColor = false
@@ -43,9 +44,8 @@ func Run(){
 }
 
 func onOpenedPR(){
-	
 	current_config, err := config.Load(); if err != nil {
-		fmt.Println(err)
+		fmt.Println("[ERROR] - Error loading config file")
 		os.Exit(1)
 	}
 
@@ -64,7 +64,7 @@ func onOpenedPR(){
 			switch(status){
 				case 404:
 					fmt.Println("[LOG] - Module not found, uploading new module")
-					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: "New Version Published"}
+					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: "New Version"}
 					result.Add()
 					module.Upload(current_config.Terrapak.Hostname,&mod)
 				break;
@@ -99,7 +99,7 @@ func onMergedPR(){
 
 		if status == 200 {
 			if module.PublishedAt.Year() < 2000 {
-				comment := fmt.Sprintf("Module Published: `%s/%s/%s/%s/%s`",gc.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
+				comment := fmt.Sprintf("Module Published: ``%s/%s/%s/%s/%s``",gc.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider,mod.Version)
 				ms.PublishModule(&mod)
 				github.AddPRComment(comment)
 			}
@@ -119,6 +119,7 @@ func onClosedPR(){
 		os.Exit(1)
 	}
 
+	github.AddPRComment("## Terrapak \n Removing draft module versions...")
 	for _, mod := range current_config.Modules {
 		module,status, err := ms.Read(current_config.Terrapak.Hostname,&mod); if err != nil {
 			fmt.Println(err)

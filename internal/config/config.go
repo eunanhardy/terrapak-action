@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver"
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 )
 
@@ -21,6 +22,7 @@ var (
 type Config struct {
 	Terrapak TerrapakConfig `hcl:"terrapak,block"`
 	Modules []ModuleConfig `hcl:"module,block"`
+	Remain  hcl.Body `hcl:",remain"`
 }
 
 type TerrapakConfig struct {
