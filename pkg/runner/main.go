@@ -45,7 +45,7 @@ func Run(){
 
 func onOpenedPR(){
 	current_config, err := config.Load(); if err != nil {
-		fmt.Println(err)
+		fmt.Println("[ERROR] - Error loading config file")
 		os.Exit(1)
 	}
 
@@ -64,7 +64,7 @@ func onOpenedPR(){
 			switch(status){
 				case 404:
 					fmt.Println("[LOG] - Module not found, uploading new module")
-					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: fmt.Sprintf("New Version Published: %s/%s/%s/%s",current_config.Terrapak.Hostname,mod.GetNamespace(mod.Namespace),mod.Name,mod.Provider)}
+					result := store.ResultStore{Name: mod.Name, Version: mod.Version, Change: "New Version"}
 					result.Add()
 					module.Upload(current_config.Terrapak.Hostname,&mod)
 				break;
