@@ -1,5 +1,5 @@
-## Deprecation: This repository is no longer supported. Please use the [Terrapak](https://github.com/eunanhardy/terrapak)
-
+> [!CAUTION]
+> Deprecation: This repository is no longer supported. Please use the [Terrapak](https://github.com/eunanhardy/terrapak)
 # Terrapak for Github Actions
 This action integrates with your GitHub pull requests to automatically publish new versions of your Terraform modules in conjunction with [Terrapak](https://github.com/eunanhardy/terrapak)
 
